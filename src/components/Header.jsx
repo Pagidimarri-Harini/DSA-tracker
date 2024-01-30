@@ -1,15 +1,13 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';  // Import the AuthContext hook
-import './Header.css';  // Import your custom CSS file
+import { Link } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import './Header.css';
 
-const Header = () => {
+const Header = ({ setQuestionData }) => {
     const { isLoggedIn, logout } = useAuth();
-    const navigate = useNavigate();
 
     const handleLogout = () => {
+        setQuestionData([])
         logout();
-        navigate('/login');
     };
 
     return (
@@ -31,9 +29,6 @@ const Header = () => {
                         </li>
                         <li className="nav-item">
                             <Link to="/interviews" className="nav-link">Interview Experiences</Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link to="/forum" className="nav-link">Discussion Forum</Link>
                         </li>
                     </ul>
                 </div>

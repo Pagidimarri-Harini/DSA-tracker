@@ -1,5 +1,4 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { checkLoginData } from '../services/userService';
@@ -9,29 +8,28 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const { login } = useAuth();
+    const { login, isLoggedIn } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
         try {
-            // Call checkLoginData to get the response
             const response = await checkLoginData(email, password);
 
-            console.log(response);
-
             if (response.success) {
-                login();
-                navigate('/home');
+                login(response.token);
             } else {
-                // Set the error message for incorrect password
                 setErrorMessage('Incorrect email or password. Please try again.');
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Login Error:', error);
         }
     };
+
+    useEffect(() => {
+        isLoggedIn && navigate("/")
+        // eslint-disable-next-line
+    }, [isLoggedIn])
 
     return (
         <div>

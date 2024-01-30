@@ -1,25 +1,24 @@
 import { React, useState, useEffect, useContext } from "react";
 import BootstrapTable from "react-bootstrap-table-next";
-import "bootstrap/dist/css/bootstrap.min.css";
 import ToolkitProvider from "react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit";
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from "react-bootstrap/FormControl";
-import Spinner from "react-bootstrap/Spinner";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import Badge from "react-bootstrap/Badge";
 import Fade from "react-reveal/Fade";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import "./Topic.css";
 import { ThemeContext } from "../../App";
+import { useAuth } from '../AuthContext';
 import Button from "react-bootstrap/Button";
 
 function RandomButton({ data }) {
 	let min = 0;
-	let max = data.questions.length - 1;
+	let max = data?.questions?.length - 1;
 	const [rnd, setRnd] = useState(Math.floor(Math.random() * (max - min)) + min);
 	function pickRandomHandler() {
 		setRnd(Math.floor(Math.random() * (max - min)) + min);
@@ -29,8 +28,8 @@ function RandomButton({ data }) {
 			className="pick-random-btn"
 			onClick={pickRandomHandler}
 			variant="outline-primary"
-			href={data.questions[rnd].URL}
-			target="_blank"
+			href={data?.questions[rnd]?.URL}
+			target={data?.questions[rnd]?.URL?.startsWith("http") ? "_blank" : "_self"}
 		>
 			Pick Random{" "}
 			<span role="img" aria-label="woman-juggling-emoji" className="emojiFix">
@@ -41,30 +40,27 @@ function RandomButton({ data }) {
 }
 
 function Topic({ data, updateData }) {
-	/*
-		This component takes data releted to a paticular topic 
-		and updateData() from App component
-	*/
-	/*
-		Setting state for fields that comes from `data` prop 
-		so that `data` prop is not undefined on reload
-	*/
+
+	const { isLoggedIn } = useAuth();
+	const navigate = useNavigate();
 
 	const [select, setSelected] = useState([]);
 	const [questionsTableData, setQuestionsTableData] = useState([]);
 	const [topicName, setTopicName] = useState("");
 	const [showNoteSection, setShowNoteSection] = useState(false);
-	const [latestData, setLatestData] = useState(data);
 
 	const dark = useContext(ThemeContext);
-	// updating states using useEffect with dependency  on `data` prop
-	useEffect(() => {
 
-		// data = latestData;
-		if (latestData !== undefined) {
+	useEffect(() => {
+		!isLoggedIn && navigate("/login")
+		// eslint-disable-next-line
+	}, [isLoggedIn])
+
+
+	useEffect(() => {
+		if (data !== undefined) {
 			let doneQuestion = [];
-			
-			let tableData = latestData.questions.map((question, index) => {
+			let tableData = data.questions?.map((question, index) => {
 				if (question.Done) {
 					doneQuestion.push(index);
 				}
@@ -79,7 +75,7 @@ function Topic({ data, updateData }) {
 						<>
 							<a
 								href={question.URL}
-								target="_blank"
+								target={question.URL.startsWith("http") ? "_blank" : "_self"}
 								rel="noopener noreferrer"
 								style={{ fontWeight: "600", fontSize: "20px" }}
 								className="question-link"
@@ -90,22 +86,24 @@ function Topic({ data, updateData }) {
 								placement="left"
 								overlay={question.Notes && question.Notes.length !== 0 ? renderTooltipView : renderTooltipAdd}
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									fill="currentColor"
-									class={question.Notes && question.Notes.length !== 0 ? "bi bi-sticky-fill" : "bi bi-sticky"}
-									viewBox="0 0 16 16"
-									style={{ float: "right", color: "green", cursor: "pointer" }}
-									onClick={() => shownotes(index)}
-								>
-									{question.Notes && question.Notes.length !== 0 ? (
-										<path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zm6 8.5a1 1 0 0 1 1-1h4.396a.25.25 0 0 1 .177.427l-5.146 5.146a.25.25 0 0 1-.427-.177V9.5z" />
-									) : (
-										<path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5V8H9.5A1.5 1.5 0 0 0 8 9.5V14H2.5a.5.5 0 0 1-.5-.5v-11zm7 11.293V9.5a.5.5 0 0 1 .5-.5h4.293L9 13.793z" />
-									)}
-								</svg>
+								<div>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="16"
+										height="16"
+										fill="currentColor"
+										className={question.Notes && question.Notes.length !== 0 ? "bi bi-sticky-fill" : "bi bi-sticky"}
+										viewBox="0 0 16 16"
+										style={{ float: "right", color: "green", cursor: "pointer" }}
+										onClick={() => shownotes(index)}
+									>
+										{question.Notes && question.Notes.length !== 0 ? (
+											<path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zm6 8.5a1 1 0 0 1 1-1h4.396a.25.25 0 0 1 .177.427l-5.146 5.146a.25.25 0 0 1-.427-.177V9.5z" />
+										) : (
+											<path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5V8H9.5A1.5 1.5 0 0 0 8 9.5V14H2.5a.5.5 0 0 1-.5-.5v-11zm7 11.293V9.5a.5.5 0 0 1 .5-.5h4.293L9 13.793z" />
+										)}
+									</svg>
+								</div>
 							</OverlayTrigger>
 						</>
 					),
@@ -115,11 +113,11 @@ function Topic({ data, updateData }) {
 				};
 			});
 			setQuestionsTableData(tableData);
-			setTopicName(latestData.topicName);
+			setTopicName(data.topicName);
 			setSelected(doneQuestion);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [latestData]);
+	}, [data]);
 
 	//tooltip functions
 	const renderTooltipView = (props) => (
@@ -144,7 +142,7 @@ function Topic({ data, updateData }) {
 				<div className="container">
 					<div>
 						<InputGroup className="mb-4">
-							<div class="input-group-append">
+							<div className="input-group-append">
 								<RandomButton data={data} />
 							</div>
 							<FormControl
@@ -155,14 +153,14 @@ function Topic({ data, updateData }) {
 								onChange={handleChange}
 								style={{ fontSize: "18px", fontWeight: "600" }}
 							/>
-							<div class="input-group-prepend">
+							<div className="input-group-prepend">
 								<Badge
 									variant="success"
 									style={{ borderTopLeftRadius: "0px", borderBottomLeftRadius: "0px", background: "rgb(200, 230, 201)" }}
 								>
 									<p className="completed-questions" style={{ color: "black", padding: "8px" }}>
 										<span style={{ fontWeight: "bold" }}>
-											{select.length}/{data.questions.length}
+											{select.length}/{data?.questions?.length}
 										</span>{" "}
 										Done{" "}
 										<span className="emojiFix" role="img" aria-label="checker">
@@ -178,6 +176,7 @@ function Topic({ data, updateData }) {
 			</div>
 		);
 	};
+
 	// table config
 	const columns = [
 		{
@@ -222,132 +221,110 @@ function Topic({ data, updateData }) {
 		dataField: "_is_selected",
 		order: "asc",
 	};
-	function handleDataUpdate(updatedData) {
-		setLatestData(updatedData);
-	  }
-	// func() triggered when a question is marked done
-// func() triggered when a question is marked done
-// func() triggered when a question is marked done
-async function handleSelect(row, isSelect) {
-	setSelected((prevSelect) => {
-	  const updatedSelect = isSelect
-		? [...prevSelect, row.id]
-		: prevSelect.filter((selectedId) => selectedId !== row.id);
-  
-	  const updatedQuestions = data.questions.map((question, index) => ({
-		...question,
-		Done: updatedSelect.includes(index),
-	  }));
-  
-	  // Calculate the number of done questions directly from updatedSelect
-	  const doneQuestionsCount = updatedSelect.length;
-  
-	  // Check if there are any done questions to determine the 'started' status
-	  const startedStatus = doneQuestionsCount > 0;
-  
-	//   console.log("Row ID:", row.id);
-	//   console.log("Is Select:", isSelect);
-	//   console.log("Updated Select:", updatedSelect);
-	//   console.log("Updated Questions:", updatedQuestions);
-	//   console.log("Done Questions Count:", doneQuestionsCount);
-  
-	  // Assuming row.id is the correct identifier for your question
-	  updateData(data.topicName, {
-		started: startedStatus,
-		doneQuestions: doneQuestionsCount,
-		questions: updatedQuestions,
-	  }, data.position, row.id);
-  
-	  displayToast(isSelect, row.id, doneQuestionsCount);
-	  handleDataUpdate({
-        ...data,
-        started: startedStatus,
-        doneQuestions: doneQuestionsCount,
-        questions: updatedQuestions,
-      });
 
-	  return updatedSelect;
-	});
-  }
-  
+	async function handleSelect(row, isSelect) {
+		setSelected((prevSelect) => {
+			const updatedSelect = isSelect
+				? [...prevSelect, row.id]
+				: prevSelect.filter((selectedId) => selectedId !== row.id);
 
-  
-	  
-	  
-	  
+			const updatedQuestions = data.questions.map((question, index) => ({
+				...question,
+				Done: updatedSelect.includes(index),
+			}));
+
+			// Calculate the number of done questions directly from updatedSelect
+			const doneQuestionsCount = updatedSelect.length;
+
+			// Check if there are any done questions to determine the 'started' status
+			const startedStatus = doneQuestionsCount > 0;
+
+			// Assuming row.id is the correct identifier for your question
+			updateData(data.topicName, {
+				started: startedStatus,
+				doneQuestions: doneQuestionsCount,
+				questions: updatedQuestions,
+			}, data.position, row.id);
+
+			displayToast(isSelect, row.id, doneQuestionsCount);
+
+			return updatedSelect;
+		});
+	}
+
+
 
 	// trigger an information message for user on select change
 	function displayToast(isSelect, id, doneQuestionsCount) {
 		const { type, icon, dir } = {
-		  type: isSelect ? "Done" : "Incomplete",
-		  icon: isSelect ? "🎉" : "🙇🏻‍♂️",
-		  dir: isSelect ? "👇🏻" : "👆🏻",
+			type: isSelect ? "Done" : "Incomplete",
+			icon: isSelect ? "🎉" : "🙇🏻‍♂️",
+			dir: isSelect ? "👇🏻" : "👆🏻",
 		};
-	  
+
 		const title = `${doneQuestionsCount}/${data.questions.length} Done`;
 		const subTitle = `Question pushed ${dir} the table.`;
-	  
+
 		const Card = (
-		  <>
-			<p>
-			  {title} <span className="emojiFix">{icon}</span>
-			</p>
-			<p className="toast-subtitle">{subTitle}</p>
-		  </>
+			<>
+				<p>
+					{title} <span className="emojiFix">{icon}</span>
+				</p>
+				<p className="toast-subtitle">{subTitle}</p>
+			</>
 		);
-	  
+
 		toast(Card, {
-		  className: `toast-${type}`,
-		  autoClose: 2000,
-		  closeButton: true,
+			className: `toast-${type}`,
+			autoClose: 2000,
+			closeButton: true,
 		});
-	  }
-	  
-	  
+	}
+
+
 
 	//Notes component
 	const NoteSection = (props) => {
 		let id = localStorage.getItem("cid");
-	
-		const [quickNotes, setQuickNotes] = useState(data.questions[id]?.Notes);
+
+		const [quickNotes, setQuickNotes] = useState(data?.questions[id]?.Notes);
 		const addnewnotes = (event) => {
-		  setQuickNotes(event.target.value);
+			setQuickNotes(event.target.value);
 		};
-	
+
 		const onadd = () => {
-		  let key = topicName.replace(/[^A-Z0-9]+/gi, "_").toLowerCase();
-	
-		  if (id) {
-			let que = data.questions;
-			que[id].Notes = quickNotes.trim().length === 0 ? "" : quickNotes.trim();
-			updateData(
-			  key,
-			  {
-				started: data.started,
-				doneQuestions: data.doneQuestions,
-				questions: que,
-			  },
-			  data.position,
-			  id
-			);
-			localStorage.removeItem("cid");
-		  } else {
-			saveAndExitNotes();
-		  }
-		//   setShowNoteSection(false);
+			let key = topicName.replace(/[^A-Z0-9]+/gi, "_").toLowerCase();
+
+			if (id) {
+				let que = data.questions;
+				que[id].Notes = quickNotes.trim().length === 0 ? "" : quickNotes.trim();
+				updateData(
+					key,
+					{
+						started: data.started,
+						doneQuestions: data.doneQuestions,
+						questions: que,
+					},
+					data.position,
+					id
+				);
+				localStorage.removeItem("cid");
+				saveAndExitNotes();
+			}
 		};
+
 
 		return (
 			<>
-				<div className="note-area">
+				<div className="note-area" style={{ display: showNoteSection ? "block" : "none" }}>
 					<div className="note-container">
-						<div className="question-title" style={{ color: "black" }}></div>
-						<textarea maxLength="432" className="note-section" placeholder="your notes here" onChange={addnewnotes}></textarea>
+						<div className="question-title" style={{ color: "black" }}>{data?.questions[id]?.Problem}</div>
+						<textarea maxLength="432" className="note-section" style={{ display: showNoteSection ? "block" : "none" }} placeholder="your notes here" value={quickNotes} onChange={addnewnotes}></textarea>
 						<div className="button-container">
-							<button className="note-exit" onClick={saveAndExitNotes}>
+							<button className="note-exit" style={{ display: showNoteSection ? "block" : "none" }} onClick={saveAndExitNotes}>
 								Close
 							</button>
-							<button className="note-save" onClick={onadd}>
+							<button className="note-save" style={{ display: showNoteSection ? "block" : "none" }} onClick={onadd}>
 								Save
 							</button>
 						</div>
@@ -358,28 +335,16 @@ async function handleSelect(row, isSelect) {
 	};
 	//function for closing notes
 	function saveAndExitNotes() {
-		document.getElementsByClassName("note-section")[0].style.display = "none";
-		document.getElementsByClassName("note-exit")[0].style.display = "none";
-		document.getElementsByClassName("note-save")[0].style.display = "none";
-		document.getElementsByClassName("note-area")[0].style.display = "none";
 		localStorage.removeItem("cid");
 		setShowNoteSection(false);
 	}
 	//funtion for taking notes
 	function shownotes(ind) {
-		document.getElementsByClassName("note-section")[0].style.display = "block";
-		document.getElementsByClassName("note-exit")[0].style.display = "block";
-		document.getElementsByClassName("note-save")[0].style.display = "block";
-		document.getElementsByClassName("note-area")[0].style.display = "block";
-
 		localStorage.setItem("cid", ind);
-		document.getElementsByClassName("note-section")[0].value = data.questions[ind].Notes;
-		document.getElementsByClassName("question-title")[0].innerHTML = data.questions[ind].Problem;
 		setShowNoteSection(true);
 	}
 	return (
 		<>
-
 			<br />
 
 			<h1 className="text-center mb-4">
@@ -390,11 +355,6 @@ async function handleSelect(row, isSelect) {
 				<Link to="/">Topics</Link>/{topicName}
 			</h3>
 
-
-
-			<div className="d-flex justify-content-center">
-				<Spinner animation="grow" variant="success" />
-			</div>
 
 			<ToolkitProvider
 				className="float-right"
@@ -428,7 +388,3 @@ async function handleSelect(row, isSelect) {
 
 
 export default Topic;
-
-
-
-

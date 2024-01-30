@@ -1,5 +1,4 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { postSignupData } from '../services/userService';
@@ -9,29 +8,29 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [errorMessage, setErrorMessage] = useState(''); // New state for error message
-    const { login } = useAuth();
+    const [errorMessage, setErrorMessage] = useState('');
+    const { login, isLoggedIn } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
         try {
-            // Call postSignupData to get the response
             const response = await postSignupData({ name, email, password });
 
             if (response.success) {
-                alert(response.message); // You can replace this with your preferred success notification
-                login();
-                navigate('/home');
+                login(response.token);
             } else {
-                // Set the error message for user already exists
                 setErrorMessage('Account with this email already exists. Please log in.');
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Signup Error:', error);
         }
     };
+
+    useEffect(() => {
+        isLoggedIn && navigate("/")
+        // eslint-disable-next-line
+    }, [isLoggedIn])
 
     return (
         <div>

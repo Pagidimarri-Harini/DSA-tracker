@@ -1,6 +1,6 @@
 const PublicPage = () => {
     return(
-        <h1>welcome to dsa tracker</h1>
+        <h1 className="text-center mt-2">Welcome to DSA Tracker</h1>
 
     );
 
