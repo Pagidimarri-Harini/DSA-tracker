@@ -62,6 +62,7 @@ function CodeEditor({ runCode }) {
             <Card>
                 <Card.Body>
                     <AceEditor
+                        setOptions={{ useWorker: false }}
                         mode={language}
                         theme={theme}
                         value={code}
