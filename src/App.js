@@ -13,6 +13,7 @@ import Login from "./components/Login";
 import Question from "./components/Question/Question";
 import { useAuth } from './components/AuthContext';
 import PublicPage from "./PublicPage";
+import Interview from "./components/interview/interview";
 
 // Creating a theme context
 export const ThemeContext = createContext(null);
@@ -144,8 +145,14 @@ function App() {
               element={<TopicCard questionData={questionData} />}
             />
             <Route path="/signup" element={<Register />} />
+            <Route path="/interviews" element={<Interview />}/>
             <Route path="/login" element={<Login />} />
-
+            
+            <Route
+              exact
+              path="/problems"
+              element={<TopicCard questionData={questionData} />}
+            />
             <Route
               path="/about"
               element={
@@ -174,7 +181,7 @@ function App() {
         </ThemeContext.Provider>
 
       </div>
-      <Footer dark={dark} setDark={setDark} />
+      {/* <Footer dark={dark} setDark={setDark} /> */}
     </>
   );
 }
