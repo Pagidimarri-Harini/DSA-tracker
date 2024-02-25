@@ -12,8 +12,7 @@ process.stdin.on("end", _ => {
     inputString = inputString.trim().split("\n").map(str => {
         return str.trim()
     })
-    console.log(inputString);
-    // main()
+    main()
 })
 
 function readLine() {

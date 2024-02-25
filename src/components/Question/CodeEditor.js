@@ -5,7 +5,7 @@ import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/ext-beautify';
-import { getCodeApi, runCodeApi, submitCodeApi } from "../../services/questionService"
+import { getCodeApi, saveCodeApi, runCodeApi, submitCodeApi } from "../../services/questionService"
 
 function CodeEditor({ qu, qd, updateData, iTopic, iQu }) {
     const [language, setLanguage] = useState('javascript');
@@ -24,7 +24,7 @@ function CodeEditor({ qu, qd, updateData, iTopic, iQu }) {
 
     useEffect(() => {
         if (!localStorage.getItem(qu + language)) {
-            getCode(language)
+            getCode(language, 1)
         } else {
             setCode(localStorage.getItem(qu + language))
         }
@@ -33,15 +33,16 @@ function CodeEditor({ qu, qd, updateData, iTopic, iQu }) {
 
     useEffect(() => {
         localStorage.setItem(qu + language, code)
+        saveCodeApi(qu, language, code)
         // eslint-disable-next-line
     }, [code]);
 
-    const getCode = async (lang) => {
+    const getCode = async (lang, key) => {
         try {
-            const resData = await getCodeApi(qu, lang)
-            setCode(resData)
+            const resData = await getCodeApi(qu, lang, key)
+            setCode(resData.code)
         } catch (error) {
-            setCode("")
+            console.log(error);
         }
     }
 
@@ -88,7 +89,7 @@ function CodeEditor({ qu, qd, updateData, iTopic, iQu }) {
     const onLangChange = (e) => {
         setLanguage(e.target.value)
         if (!localStorage.getItem(qu + e.target.value)) {
-            getCode(e.target.value)
+            getCode(e.target.value, 1)
         } else {
             setCode(localStorage.getItem(qu + e.target.value))
         }
@@ -137,7 +138,7 @@ function CodeEditor({ qu, qd, updateData, iTopic, iQu }) {
                     />
                     <Button variant="primary" className='mt-3 me-2' onClick={() => runCode(language, code)}>Run Code</Button>
                     <Button variant="primary" className='mt-3 me-2' onClick={() => submitCode(language, code)}>Submit Code</Button>
-                    <Button variant="secondary" className='mt-3 me-2' onClick={() => getCode(language)}>Reset Code</Button>
+                    <Button variant="secondary" className='mt-3 me-2' onClick={() => getCode(language, 0)}>Reset Code</Button>
                 </Card.Body>
             </Card>
             <Card>
