@@ -10,7 +10,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../App";
 import { useAuth } from '../AuthContext';
 import Chatbot from "./Chatbot";
-
 import "./topicCard.css";
 
 export default function TopicCard({ questionData }) {
@@ -18,15 +17,12 @@ export default function TopicCard({ questionData }) {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
-  const findPercentage = (doneQuestions, totalQuestions) => {
-    return Math.round((doneQuestions / totalQuestions) * 100);
-  };
+  const findPercentage = (doneQuestions, totalQuestions) => Math.round((doneQuestions / totalQuestions) * 100);
 
   useEffect(() => {
     !isLoggedIn && navigate("/login")
     // eslint-disable-next-line
   }, [isLoggedIn])
-
 
   let totalSolved = 0;
   let totalQuestions = 0;

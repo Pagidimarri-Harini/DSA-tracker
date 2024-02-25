@@ -10,10 +10,19 @@ app.use(express.json({ limit }));
 app.use(express.urlencoded({ limit, extended: true }));
 app.use(cors());
 
+require(__basedir + "/lib/dirCheck")()
 require(__basedir + "/lib/dbConn")()
-require(__basedir + "/lib/serverRoutes")(app)
+require(__basedir + "/lib/routes/index.routes")(app)
+
+app.use("/", express.static(__basedir + '/static')) // serve a public folder
 
 app.listen(port, () => {
   console.log(`Server listening on http://127.0.0.1:${port}`);
 });
 
+/*
+// pm2
+// urls
+// input validation
+// select/lean/limit in queries
+*/

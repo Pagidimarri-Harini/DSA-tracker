@@ -3,6 +3,20 @@ pre {
     padding: 10px;
 }
 
-.xTag {
+.difficulty {
     color: green;
+}
+
+.scrollable {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    height: 90vh;
+}
+
+.success {
+    color: green;
+}
+
+.failed {
+    color: red;
 }

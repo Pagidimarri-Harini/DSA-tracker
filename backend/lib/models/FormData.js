@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const { compareSync } = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
   name: String,
@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   password: String
 })
 UserSchema.methods.comparePassword = function (password) {
-  return bcrypt.compareSync(password, this.password);
+  return compareSync(password, this.password);
 };
 
 const questionSchema = new mongoose.Schema({

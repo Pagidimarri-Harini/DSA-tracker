@@ -24,18 +24,32 @@ function RandomButton({ data }) {
 		setRnd(Math.floor(Math.random() * (max - min)) + min);
 	}
 	return (
-		<Button
-			className="pick-random-btn"
-			onClick={pickRandomHandler}
-			variant="outline-primary"
-			href={data?.questions[rnd]?.URL}
-			target={data?.questions[rnd]?.URL?.startsWith("http") ? "_blank" : "_self"}
-		>
-			Pick Random{" "}
-			<span role="img" aria-label="woman-juggling-emoji" className="emojiFix">
-				🤹🏻‍♀️
-			</span>
-		</Button>
+		<>
+			{
+				data?.questions[rnd]?.URL?.startsWith("http") ?
+					<Button
+						className="pick-random-btn"
+						onClick={pickRandomHandler}
+						variant="outline-primary"
+						href={data?.questions[rnd]?.URL}
+						target="_blank"
+					>
+						Pick Random{" "}
+						<span role="img" aria-label="woman-juggling-emoji" className="emojiFix">
+							🤹🏻‍♀️
+						</span>
+					</Button> :
+					<Link to={data?.questions[rnd]?.URL}
+						className="btn btn-outline-primary pick-random-btn"
+						onClick={pickRandomHandler}
+					>
+						Pick Random{" "}
+						<span role="img" aria-label="woman-juggling-emoji" className="emojiFix">
+							🤹🏻‍♀️
+						</span>
+					</Link>
+			}
+		</>
 	);
 }
 
@@ -58,7 +72,7 @@ function Topic({ data, updateData }) {
 
 
 	useEffect(() => {
-		if (data !== undefined) {
+		if (data) {
 			let doneQuestion = [];
 			let tableData = data.questions?.map((question, index) => {
 				if (question.Done) {
@@ -73,15 +87,24 @@ function Topic({ data, updateData }) {
 					id: index,
 					question: (
 						<>
-							<a
-								href={question.URL}
-								target={question.URL.startsWith("http") ? "_blank" : "_self"}
-								rel="noopener noreferrer"
-								style={{ fontWeight: "600", fontSize: "20px" }}
-								className="question-link"
-							>
-								{question.Problem}
-							</a>
+							{question.URL.startsWith("http") ?
+								<a
+									href={question.URL}
+									target="_blank"
+									rel="noopener noreferrer"
+									style={{ fontWeight: "600", fontSize: "20px" }}
+									className="question-link"
+								>
+									{question.Problem}
+								</a> :
+								<Link
+									to={question.URL}
+									style={{ fontWeight: "600", fontSize: "20px" }}
+									className="question-link"
+								>
+									{question.Problem}
+								</Link>
+							}
 							<OverlayTrigger
 								placement="left"
 								overlay={question.Notes && question.Notes.length !== 0 ? renderTooltipView : renderTooltipAdd}
@@ -183,12 +206,12 @@ function Topic({ data, updateData }) {
 			dataField: "id",
 			text: "Q-Id",
 			headerStyle: { width: "80px", fontSize: "20px", textAlign: "center" },
-			style: { fontSize: "20px", cursor: "pointer", textAlign: "center" },
-			events: {
-				onClick: (e, column, columnIndex, row, rowIndex) => {
-					handleSelect(row, !row._is_selected);
-				},
-			},
+			style: { fontSize: "20px", textAlign: "center" },
+			// events: {
+			// 	onClick: (e, column, columnIndex, row, rowIndex) => {
+			// 		handleSelect(row, !row._is_selected);
+			// 	},
+			// },
 		},
 		{
 			dataField: "question",
@@ -240,13 +263,13 @@ function Topic({ data, updateData }) {
 			const startedStatus = doneQuestionsCount > 0;
 
 			// Assuming row.id is the correct identifier for your question
-			updateData(data.topicName, {
+			updateData({
 				started: startedStatus,
 				doneQuestions: doneQuestionsCount,
 				questions: updatedQuestions,
 			}, data.position, row.id);
 
-			displayToast(isSelect, row.id, doneQuestionsCount);
+			displayToast(isSelect, doneQuestionsCount);
 
 			return updatedSelect;
 		});
@@ -255,7 +278,7 @@ function Topic({ data, updateData }) {
 
 
 	// trigger an information message for user on select change
-	function displayToast(isSelect, id, doneQuestionsCount) {
+	function displayToast(isSelect, doneQuestionsCount) {
 		const { type, icon, dir } = {
 			type: isSelect ? "Done" : "Incomplete",
 			icon: isSelect ? "🎉" : "🙇🏻‍♂️",

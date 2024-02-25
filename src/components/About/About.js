@@ -4,7 +4,7 @@ import Alert from "react-bootstrap/Alert";
 import Badge from "react-bootstrap/Badge";
 import Spinner from "react-bootstrap/Spinner";
 import Fade from "react-reveal/Fade";
-import { useAuth } from '../AuthContext';  
+import { useAuth } from '../AuthContext';
 
 export default function About({ resetData, exportData, importData }) {
 	const { isLoggedIn } = useAuth();
@@ -16,7 +16,6 @@ export default function About({ resetData, exportData, importData }) {
 
 	function handleChange(e) {
 		const fileReader = new FileReader();
-		fileReader.readAsText(e.target.files[0], "UTF-8");
 		fileReader.onload = (e) => {
 			const JSONData = JSON.parse(e.target.result);
 			importData(JSONData, () => {
@@ -24,6 +23,7 @@ export default function About({ resetData, exportData, importData }) {
 				navigate("/");
 			});
 		};
+		fileReader.readAsText(e.target.files[0], "UTF-8");
 	}
 	useEffect(() => {
 		!isLoggedIn && navigate("/login")
@@ -76,7 +76,10 @@ export default function About({ resetData, exportData, importData }) {
 								onClick={() => {
 									if (window.confirm("Are you sure you want to reset the progress !")) {
 										setResetSpinnerState(true);
-										resetData();
+										resetData(() => {
+											setResetSpinnerState(false)
+											navigate("/")
+										});
 									}
 								}}
 							>

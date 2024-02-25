@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    window.localStorage.removeItem("authToken")
+    window.localStorage.clear()
     setIsLoggedIn(false);
   };
 

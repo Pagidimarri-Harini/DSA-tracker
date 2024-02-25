@@ -1,19 +1,27 @@
 
 import React, { useState, useEffect, createContext } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./App.css";
 import TopicCard from "./components/TopicCard/TopicCard";
 import About from "./components/About/About";
-import Footer from "./components/Footer/Footer";
-import "./App.css";
+// import Footer from "./components/Footer/Footer";
 import Topic from "./components/Topic/Topic";
 import Header from "./components/Header";
 import Register from "./components/Register";
 import Login from "./components/Login";
 import Question from "./components/Question/Question";
-import { useAuth } from './components/AuthContext';
+import InfoPage from "./components/Info/InfoPage";
+import Companies from "./components/Interview/Companies";
 import PublicPage from "./PublicPage";
-import Interview from "./components/interview/interview";
+import { useAuth } from './components/AuthContext';
+import Interview from "./components/Info/Interview";
+import { getMyId } from "./services/userService"
+
+/*
+// add default props
+// remove unused stuff
+*/
 
 // Creating a theme context
 export const ThemeContext = createContext(null);
@@ -22,28 +30,33 @@ function App() {
   const { isLoggedIn } = useAuth();
   const [questionData, setQuestionData] = useState([]);
   const [dark, setDark] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if ("authToken" in window.localStorage) {
-      fetchData()
-    }
-
     if (!("isDark" in window.localStorage)) {
       window.localStorage.setItem("isDark", dark);
     } else {
       let temp = window.localStorage["isDark"];
       setDark(temp === "true");
     }
-  }, [dark, isLoggedIn]);
+  }, [dark]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if ("authToken" in window.localStorage) {
+      if (questionData.length === 0) {
+        fetchData()
+      }
+      if (!window.localStorage.getItem("userid")) {
+        getMyId()
+      }
+    }
+  }, [isLoggedIn, questionData]);
+
+  async function fetchData() {
     try {
-      const response = await fetch(`${process.env.REACT_APP_DOMAIN}/getData`,
+      const response = await fetch(`${process.env.REACT_APP_DOMAIN}/t/getData`,
         {
-          method: "POST",
+          method: "GET",
           headers: {
-            "Content-Type": "application/json",
             "authToken": localStorage.getItem("authToken")
           }
         }
@@ -55,9 +68,9 @@ function App() {
     }
   };
 
-  async function updateData(key, topicData, topicPosition, rowId) {
+  async function updateData(topicData, topicPosition, rowId) {
     try {
-      await fetch(`${process.env.REACT_APP_DOMAIN}/updateData/${key}`, {
+      await fetch(`${process.env.REACT_APP_DOMAIN}/t/updateData`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -76,17 +89,16 @@ function App() {
     }
   }
 
-  async function resetData() {
+  async function resetData(cb) {
     try {
-      await fetch(`${process.env.REACT_APP_DOMAIN}/resetData`, {
+      await fetch(`${process.env.REACT_APP_DOMAIN}/t/resetData`, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           "authToken": localStorage.getItem("authToken")
         }
       });
       setQuestionData([]);
-      navigate(window.location.origin);
+      cb()
     } catch (error) {
       console.error("Error resetting data:", error.message);
     }
@@ -94,15 +106,14 @@ function App() {
 
   async function exportData(cb) {
     try {
-      const response = await fetch(`${process.env.REACT_APP_DOMAIN}/exportData`, {
+      const response = await fetch(`${process.env.REACT_APP_DOMAIN}/t/exportData`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "authToken": localStorage.getItem("authToken")
         }
       });
-      const _body = await response.json()
-      const dataJson = 'data:text/json;charset=utf-8,' + JSON.stringify(_body.data);
+      const body = await response.json()
+      const dataJson = 'data:text/json;charset=utf-8,' + JSON.stringify(body.data);
       const _a = document.createElement("a")
       _a.href = encodeURI(dataJson)
       _a.download = `export-${Date.now()}.json`
@@ -116,7 +127,7 @@ function App() {
 
   async function importData(data, callback) {
     try {
-      const res = await fetch(`${process.env.REACT_APP_DOMAIN}/importData`, {
+      const res = await fetch(`${process.env.REACT_APP_DOMAIN}/t/importData`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,10 +155,10 @@ function App() {
               path="/"
               element={<TopicCard questionData={questionData} />}
             />
+            <Route path="/interviews" element={<Companies questionData={questionData} />} />
             <Route path="/signup" element={<Register />} />
-            <Route path="/interviews" element={<Interview />}/>
             <Route path="/login" element={<Login />} />
-            
+
             <Route
               exact
               path="/problems"
@@ -174,7 +185,9 @@ function App() {
               ))
             }
 
-            <Route path="/question/:iTopic/:iQuestion/:qu" element={<Question qd={questionData} />} />
+            <Route path="/information/:company" element={<InfoPage />} />
+            <Route path="/interview/:id" element={<Interview questionData={questionData} />} />
+            <Route path="/question/:iTopic/:iQuestion/:qu" element={<Question qd={questionData} updateData={updateData} />} />
 
             <Route path="*" element={<PublicPage />} />
           </Routes>

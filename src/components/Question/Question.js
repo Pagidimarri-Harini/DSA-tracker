@@ -1,56 +1,90 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import "./Question.css"
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Button, Modal, Badge } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import CodeEditor from './CodeEditor';
 import { useAuth } from '../AuthContext';
+import { getDataApi, getSubmissionsApi } from "../../services/questionService"
 
-function Question({ qd }) {
+function MyModal({ active, setActive }) {
+    const [show, setShow] = useState(false);
+    const [code, setCode] = useState([]);
+
+    const handleClose = () => {
+        setShow(false)
+        setActive(null)
+    };
+    const handleShow = () => setShow(true);
+
+    useEffect(() => {
+        setCode(active.code.split('\n'))
+        handleShow(true)
+    }, [active])
+
+    return (
+        <Modal show={show} onHide={handleClose} centered={true}>
+            <Modal.Header closeButton>
+                <Modal.Title>language: {active.lang}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                {code.map((line, index) => (
+                    <div key={index}>{line}</div>
+                ))}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
+
+function Question({ qd, updateData }) {
     const { isLoggedIn } = useAuth();
     let navigate = useNavigate();
     const { iTopic, iQuestion, qu } = useParams()
+    const [activeTab, setActiveTab] = useState(0)
+    const [companies, setCompanies] = useState([])
+    const [submissions, setSubmissions] = useState([])
+    const [activeSubmission, setActiveSubmissions] = useState(null)
 
     const getData = async () => {
-        const res = await fetch(`${process.env.REACT_APP_DOMAIN}/q/${iTopic}/${qu}`, {
-            headers: {
-                "Content-Type": "application/json",
-                "authToken": localStorage.getItem("authToken")
-            },
-        })
-        if (res.ok) {
-            const data = await res.json()
-            document.getElementsByClassName("xyz")[0].innerHTML = data.problem
-            document.getElementsByClassName("xTopic")[0].innerHTML = data.title
-            document.getElementsByClassName("xTag")[0].innerHTML = data.difficulty
-            document.getElementsByClassName("xTag1")[0].innerHTML = "Accuracy: " + data.accuracy
-            document.getElementsByClassName("xTag2")[0].innerHTML = "Submissions: " + data.submissions
-            document.getElementsByClassName("xTag3")[0].innerHTML = "Points: " + data.points
-        } else {
-            document.getElementsByClassName("xOut")[0].innerHTML = "<h3>404</h3>"
+        try {
+            const data = await getDataApi(qu)
+            document.getElementsByClassName("problem")[0].innerHTML = data.problem
+            document.getElementsByClassName("topic")[0].innerHTML = data.title
+            document.getElementsByClassName("difficulty")[0].innerHTML = data.difficulty
+            document.getElementsByClassName("submissions")[0].innerHTML = "Submissions: " + data.submissions
+            setCompanies(data.companies)
+        } catch (error) {
+            document.getElementsByClassName("container0")[0].innerHTML = "<h3>404</h3>"
+            console.log(error);
         }
     }
 
-    const runCode = async (lang, code) => {
+    const getSubmissions = async () => {
         try {
-            const res = await fetch(`${process.env.REACT_APP_DOMAIN}/run`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "authToken": localStorage.getItem("authToken")
-                },
-                body: JSON.stringify({
-                    lang, code
-                })
-            })
-            if (!res.ok) {
-                return alert("could not run the code");
-            }
-            const resData = await res.json()
-            console.log(resData);
+            const data = await getSubmissionsApi(qu)
+            setSubmissions(data)
         } catch (error) {
-            alert("could not run the code");
+            document.getElementsByClassName("container1")[0].innerHTML = "<h3>no submissions yet</h3>"
+            console.log(error);
         }
     }
+
+    const viewCode = x => {
+        setActiveSubmissions(x)
+    }
+
+    useEffect(() => {
+        if (activeTab === 1) {
+            getSubmissions()
+        }
+        // eslint-disable-next-line
+    }, [activeTab])
+
 
     useEffect(() => {
         isLoggedIn ? getData() : navigate("/login")
@@ -58,45 +92,82 @@ function Question({ qd }) {
     }, [isLoggedIn])
 
     return (
-        <Container className='mt-3' fluid>
+        <Container fluid>
             <Row>
-                <Col sm={6}>
-                    <div className=' bg-light p-2'>
-                        <ul className="nav nav-tabs bg-transparent">
-                            <li className="nav-item">
-                                <div className="nav-link active" aria-current="page">
-                                    <i className="fa fa-fw fa-code"></i>
-                                    Problem
-                                </div>
-                            </li>
-                        </ul>
-                        <div className='xOut'>
-                            <div className=' p-1 xTopicBox'>
-                                <h4 className=' d-inline fw-bold p-1 xTopic'>...</h4>
-                                <i className={`fa fa-fw ${qd &&
-                                    qd.length !== 0 && qd[iTopic].questions[iQuestion].Bookmark ?
-                                    "fa-bookmark" : "fa-bookmark-o"
-                                    }`}></i>
+                <Col sm={6} className='bg-light scrollable' style={{ padding: 0 }}>
+                    <ul className="nav nav-tabs bg-transparent px-2">
+                        <li className="nav-item">
+                            <div className={activeTab === 0 ? `nav-link active` : `nav-link`} role='button' onClick={() => setActiveTab(0)}>
+                                <i className="fa fa-fw fa-code me-1"></i>
+                                Problem
                             </div>
-                            <div>
-                                <span className='m-1 p-1 fw-bold xTag'></span>
-                                <span className='m-1 p-1 fw-bold xTag1'></span>
-                                <span className='m-1 p-1 fw-bold xTag2'></span>
-                                <span className='m-1 p-1 fw-bold xTag3'></span>
+                        </li>
+                        <li className="nav-item">
+                            <div className={activeTab === 1 ? `nav-link active` : `nav-link`} role='button' onClick={() => setActiveTab(1)}>
+                                <i className="fa fa-clock-o me-1"></i>
+                                Submissions
                             </div>
-                            <div className='p-1'>
-                                <hr />
-                            </div>
-                            <div className='p-2 xyz'>
-                            </div>
+                        </li>
+                    </ul>
+                    <div className={activeTab === 0 ? `container0` : `container0 d-none`}>
+                        <div className='px-1 py-2'>
+                            <h4 className=' d-inline fw-bold p-1 topic'>...</h4>
+                            <i className={`fa fa-fw ${qd &&
+                                qd.length !== 0 && qd[iTopic].questions[iQuestion].Bookmark ?
+                                "fa-bookmark" : "fa-bookmark-o"
+                                }`}></i>
+                        </div>
+                        <div>
+                            <span className='m-1 p-1 fw-bold difficulty'></span>
+                            <span className='m-1 p-1 fw-bold submissions'></span>
+                        </div>
+                        <div className='p-1'>
+                            <hr />
+                        </div>
+                        <div className='p-2 problem'>
+                        </div>
+                        <div className='p-2'>
+                            {companies.length !== 0 &&
+                                <>
+                                    <h5 className='success'>
+                                        Company Tags:
+                                    </h5>
+                                    {companies.map((c, i) => (
+                                        <Badge key={i} className='me-2' variant="primary">{c}</Badge>
+                                    ))}
+                                </>
+                            }
                         </div>
                     </div>
+                    <div className={activeTab === 1 ? `container1` : `container1 d-none`}>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">User</th>
+                                    <th scope="col">Result</th>
+                                    <th scope="col">Language</th>
+                                    <th scope='col'></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {submissions.map((x, i) =>
+                                    <tr key={i}>
+                                        <td>{x.username || x.userid}</td>
+                                        <td className={x.success ? "success" : "failed"}>{x.success ? "success" : "failed"}</td>
+                                        <td>{x.lang}</td>
+                                        <td><button onClick={() => viewCode(x)} className="btn-sm">view code</button></td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </Col>
-                <Col sm={6}>
-                    <CodeEditor runCode={runCode} />
+                <Col sm={6} className='scrollable' style={{ padding: 0 }}>
+                    <CodeEditor qu={qu} qd={qd} iTopic={iTopic} iQu={iQuestion} updateData={updateData} />
+                    {activeSubmission && <MyModal active={activeSubmission} setActive={setActiveSubmissions} />}
                 </Col>
             </Row>
-        </Container>
+        </Container >
     )
 }
 

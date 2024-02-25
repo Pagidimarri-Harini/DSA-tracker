@@ -112,10 +112,8 @@ function Chatbot() {
         }, 1000);
     };
 
-    const sendByEnter = (e) => {
-        if (e.key === "Enter") {
-            getResponse()
-        }
+    const sendByEnter = e => {
+        e.key === "Enter" && getResponse()
     }
 
     const sendButton = () => {
